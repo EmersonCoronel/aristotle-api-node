@@ -69,7 +69,7 @@ app.post('/api/chat', async (req: Request<{}, {}, ChatRequestBody>, res: Respons
     });
 
     // Append the conversation history
-    const conversation = clientMessages.map((msg) => ({
+    const conversation = clientMessages.map((msg: Message) => ({
       role: msg.role,
       content: msg.content,
     }));
