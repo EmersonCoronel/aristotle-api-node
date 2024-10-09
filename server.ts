@@ -35,7 +35,7 @@ app.post('/api/chat', async (req, res) => {
   console.log('Mode:', mode);
 
   try {
-    const messages = [];
+    const messages: { role: string; content: string }[] = [];
 
     // Adjust the system prompt based on the mode
     let systemPrompt = '';
