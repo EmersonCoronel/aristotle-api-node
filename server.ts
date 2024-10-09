@@ -7,14 +7,30 @@ const { OpenAI } = require('openai');
 
 const app = express();
 
+// CORS configuration
+const allowedOrigins = ['http://localhost:3000', 'https://emersoncoronel.com'];
 
-const corsOptions = {
-  origin: ['http://localhost:3000', 'https://emersoncoronel.com'],
-  methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+const corsOptionsDelegate = function (req, callback) {
+  let corsOptions;
+  if (allowedOrigins.includes(req.header('Origin'))) {
+    corsOptions = {
+      origin: true,
+      methods: ['GET', 'POST', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization'],
+      credentials: true,
+      optionsSuccessStatus: 200, // For legacy browser support
+    };
+  } else {
+    corsOptions = { origin: false };
+  }
+  callback(null, corsOptions);
 };
 
-app.use(cors(corsOptions));
+// Use CORS middleware for all routes
+app.use(cors(corsOptionsDelegate));
+
+// Handle preflight OPTIONS request for all routes
+app.options('*', cors(corsOptionsDelegate));
 
 app.use(bodyParser.json());
 
