@@ -4,7 +4,7 @@
   "main": "dist/server.js",
   "scripts": {
     "build": "tsc",
-    "start": "node dist/server.js"
+    "start": "tsc && node dist/server.js"
   },
   "author": "Emerson Coronel",
   "license": "ISC",

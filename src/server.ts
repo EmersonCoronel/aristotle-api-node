@@ -34,34 +34,23 @@ interface ChatRequestBody {
   message: string;
   messages: Message[];
   mode: string;
+  selectedFigure: string;
   selectedTopic?: string;
-  selectedPhilosopher?: string;
 }
 
 // Chat endpoint
 app.post('/api/chat', async (req: Request<{}, {}, ChatRequestBody>, res: Response) => {
-  const { message, messages: clientMessages, mode, selectedTopic, selectedPhilosopher } = req.body;
+  const { message, messages: clientMessages, mode, selectedFigure, selectedTopic } = req.body;
   console.log('Received message:', message);
   console.log('Mode:', mode);
+  console.log('Figure:', selectedFigure);
+  console.log('Topic:', selectedTopic);
 
   try {
     let messages: Message[] = [];
 
-    // Adjust the system prompt based on the mode
-    let systemPrompt = '';
-
-    if (mode === 'socratic') {
-      systemPrompt = `You are Aristotle, the ancient Greek philosopher. Engage the user in a rigorous and challenging Socratic dialogue about "${selectedTopic}". Challenge their assumptions and guide them toward a refined understanding. Validate their responses only when they align with Aristotelian philosophy.`;
-    } else if (mode === 'thematic') {
-      systemPrompt = `You are Aristotle, the ancient Greek philosopher. Discuss the topic of "${selectedTopic}" with the user. Provide insights based on your works and teachings, including references to your writings when appropriate.`;
-    } else if (mode === 'battle') {
-      systemPrompt = `You are ${selectedPhilosopher}, the renowned philosopher. Engage in a debate with the user. Respond to their arguments, point out logical fallacies, and present your philosophical viewpoints. Be respectful but firm in your reasoning.`;
-    } else if (mode === 'scenario') {
-      systemPrompt = `You are Aristotle, the ancient Greek philosopher. Provide advice to the user based on your teachings of virtue ethics. Offer practical guidance that mirrors your philosophies.`;
-    } else {
-      // Default mode
-      systemPrompt = `You are Aristotle, the ancient Greek philosopher. Provide thoughtful and philosophical responses. Challenge the user’s ideas and push them to think more deeply.`;
-    }
+    // Regenerate the system prompt
+    const systemPrompt = getSystemPrompt(selectedFigure, mode, selectedTopic);
 
     messages.push({
       role: 'system',
@@ -91,25 +80,26 @@ app.post('/api/chat', async (req: Request<{}, {}, ChatRequestBody>, res: Respons
   }
 });
 
-// Request body interface for starting dialogues
-interface DialogueRequestBody {
+// Start Dialogue Endpoint
+interface StartDialogueRequestBody {
+  figure: string;
+  mode: string;
   topic: string;
 }
 
-// Start Socratic Dialogue
-app.post('/api/start-dialogue', async (req: Request<{}, {}, DialogueRequestBody>, res: Response) => {
-  const { topic } = req.body;
-  console.log('Starting Socratic Dialogue on topic:', topic);
+app.post('/api/start-dialogue', async (req: Request<{}, {}, StartDialogueRequestBody>, res: Response) => {
+  const { figure, mode, topic } = req.body;
+  console.log(`Starting dialogue with ${figure} in mode ${mode} on topic ${topic}`);
 
   try {
     const messages: Message[] = [
       {
         role: 'system',
-        content: `You are Aristotle, the ancient Greek philosopher. Engage the user in a rigorous and challenging Socratic dialogue about "${topic}". Start by asking an open-ended question that prompts the user to reveal their beliefs about the topic, but do not shy away from pushing them to think more deeply. Challenge their views, question their assumptions, and guide them toward a refined understanding. Validate their responses only when they align with the principles of Aristotelian philosophy and reflect a deep comprehension of the topic.`,
+        content: getSystemPrompt(figure, mode, topic),
       },
     ];
 
-    // Call the OpenAI API to get Aristotle's initial question
+    // Call the OpenAI API to get the initial message
     const completion = await openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
       messages,
@@ -124,65 +114,64 @@ app.post('/api/start-dialogue', async (req: Request<{}, {}, DialogueRequestBody>
   }
 });
 
-// Start Thematic Conversation
-app.post('/api/start-thematic', async (req: Request<{}, {}, DialogueRequestBody>, res: Response) => {
-  const { topic } = req.body;
-  console.log('Starting Thematic Conversation on topic:', topic);
+// Function to generate system prompts based on figure, mode, and topic
+function getSystemPrompt(figure: string, mode: string, topic?: string): string {
+  const endingInstruction = "Be sure to ask the user questions and be as interactive as possible. Your goal is to foster learning and deep thinking, and be sure to relate back to topics from your works or stories from your life. If this is your first message in the dialogue, take a sentence to introduce yourself. Try to consistently be relating your ideas and concepts back to the lives of the individual. It is important to discuss and explain the more abstract topic itself, but making it relevant to the user is key to learning. Please keep your responses under 5 sentences.";
 
-  try {
-    const messages: Message[] = [
-      {
-        role: 'system',
-        content: `You are Aristotle, the ancient Greek philosopher. Begin a conversation on the topic of "${topic}". Provide insights and include references to your works when appropriate.`,
-      },
-    ];
-
-    // Call the OpenAI API to get Aristotle's initial message
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
-      messages,
-    });
-
-    const aiResponse = completion.choices[0].message.content;
-
-    res.json({ response: aiResponse });
-  } catch (error: any) {
-    console.error('Error in /api/start-thematic:', error.response ? error.response.data : error.message);
-    res.status(500).json({ error: 'An error occurred while starting the thematic conversation.' });
+  switch (figure) {
+    case 'Aristotle':
+      if (mode === 'socratic') {
+        return `You are Aristotle, the ancient Greek philosopher. Engage the user in a Socratic dialogue about "${topic}". Challenge their assumptions and guide them toward a refined understanding. ${endingInstruction}`;
+      } else if (mode === 'teaching') {
+        return `You are Aristotle, teaching about "${topic}". Provide insightful explanations and examples. ${endingInstruction}`;
+      }
+      break;
+    case 'Albert Einstein':
+      if (mode === 'thought_experiment') {
+        return `You are Albert Einstein. Engage the user in a thought experiment about "${topic}". Encourage deep thinking about complex concepts. ${endingInstruction}`;
+      } else if (mode === 'lesson') {
+        return `You are Albert Einstein, teaching about "${topic}". Explain the theories and their implications clearly. ${endingInstruction}`;
+      }
+      break;
+    case 'Leonardo da Vinci':
+      if (mode === 'brainstorm') {
+        return `You are Leonardo da Vinci. Collaborate with the user on "${topic}". Share creative ideas and inspire innovation, learn about the user and how you can bring out the creativity in them. ${endingInstruction}`;
+      } else if (mode === 'lesson') {
+        return `You are Leonardo da Vinci, teaching about "${topic}". Provide detailed insights and techniques. ${endingInstruction}`;
+      }
+      break;
+    case 'Napoleon Bonaparte':
+      if (mode === 'simulation') {
+        return `You are Napoleon Bonaparte. Engage the user in a military simulation focused on "${topic}". Offer strategic insights, and emphasize how this could relate to someones personal daily life. ${endingInstruction}`;
+      } else if (mode === 'lesson') {
+        return `You are Napoleon Bonaparte, teaching about "${topic}". Share leadership principles and experiences. ${endingInstruction}`;
+      }
+      break;
+    case 'Cleopatra':
+      if (mode === 'role_play') {
+        return `You are Cleopatra. Engage the user in a role-playing scenario about "${topic}". Navigate diplomatic challenges together. ${endingInstruction}`;
+      } else if (mode === 'lesson') {
+        return `You are Cleopatra, teaching about "${topic}". Share historical insights and cultural knowledge. ${endingInstruction}`;
+      }
+      break;
+    case 'Confucius':
+      if (mode === 'discussion') {
+        return `You are Confucius. Engage the user in a philosophical discussion about "${topic}". Offer wisdom and provoke thought. ${endingInstruction}`;
+      } else if (mode === 'lesson') {
+        return `You are Confucius, teaching about "${topic}". Introduce your philosophies and their applications, and guide the user toward asking you thought provoking questions. ${endingInstruction}`;
+      }
+      break;
+    default:
+      // Scenario-Based Advice for any figure
+      if (mode === 'scenario') {
+        return `You are ${figure}, offering advice based on your expertise and experiences. Provide thoughtful guidance to the user's situation or question. ${endingInstruction}`;
+      } else {
+        return `You are ${figure}. Engage in a meaningful conversation with the user. ${endingInstruction}`;
+      }
   }
-});
-
-// Start Philosophy Battle
-interface BattleRequestBody {
-  philosopher: string;
+  return '';
 }
 
-app.post('/api/start-battle', async (req: Request<{}, {}, BattleRequestBody>, res: Response) => {
-  const { philosopher } = req.body;
-  console.log('Starting Philosophy Battle with:', philosopher);
-
-  try {
-    const messages: Message[] = [
-      {
-        role: 'system',
-        content: `You are ${philosopher}, the renowned philosopher. Engage in a debate with the user on a philosophical topic. Begin by presenting an argument or philosophical position.`,
-      },
-    ];
-
-    // Call the OpenAI API to get the philosopher's initial message
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
-      messages,
-    });
-
-    const aiResponse = completion.choices[0].message.content;
-
-    res.json({ response: aiResponse });
-  } catch (error: any) {
-    console.error('Error in /api/start-battle:', error.response ? error.response.data : error.message);
-    res.status(500).json({ error: 'An error occurred while starting the philosophy battle.' });
-  }
-});
 
 // Start the server
 const PORT = process.env.PORT || 4000;
