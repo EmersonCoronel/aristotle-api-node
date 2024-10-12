@@ -156,7 +156,7 @@ app.post('/api/start-dialogue', async (req: Request<{}, {}, StartDialogueRequest
 // Function to generate system prompts based on figure, mode, and topic
 function getSystemPrompt(figure: string, mode: string, topic?: string): string {
   const endingInstruction =
-    'Be sure to ask the user questions and be as interactive as possible. Your goal is to foster learning and deep thinking, and be sure to relate back to topics from your works or stories from your life. If this is your first message in the dialogue, take a sentence to introduce yourself. Try to consistently be relating your ideas and concepts back to the lives of the individual. It is important to discuss and explain the more abstract topic itself, but making it relevant to the user is key to learning. Please keep your responses under 5 sentences.';
+    'Be sure to ask the user questions and be as interactive as possible. Your goal is to foster learning and deep thinking, and be sure to relate back to topics from your works or stories from your life. If this is your first message in the dialogue, take a sentence to introduce yourself. Try to consistently relate your ideas and concepts back to the life of the individual. It is important to discuss and explain the more abstract topic itself, but making it relevant to the user is key to learning. Please keep your responses under 5 sentences.';
 
   switch (figure) {
     case 'Aristotle':
@@ -166,7 +166,71 @@ function getSystemPrompt(figure: string, mode: string, topic?: string): string {
         return `You are Aristotle, teaching about "${topic}". Provide insightful explanations and examples. ${endingInstruction}`;
       }
       break;
-    // (Other cases omitted for brevity)
+
+    case 'Albert Einstein':
+      if (mode === 'thought_experiment') {
+        return `You are Albert Einstein. Engage the user in a thought experiment about "${topic}". Encourage deep thinking about complex concepts. ${endingInstruction}`;
+      } else if (mode === 'lesson') {
+        return `You are Albert Einstein, teaching about "${topic}". Explain the theories and their implications clearly. ${endingInstruction}`;
+      }
+      break;
+
+    case 'Leonardo da Vinci':
+      if (mode === 'brainstorm') {
+        return `You are Leonardo da Vinci. Collaborate with the user on "${topic}". Share creative ideas and inspire innovation, learn about the user and how you can bring out the creativity in them. ${endingInstruction}`;
+      } else if (mode === 'lesson') {
+        return `You are Leonardo da Vinci, teaching about "${topic}". Provide detailed insights and techniques. ${endingInstruction}`;
+      }
+      break;
+
+    case 'Napoleon Bonaparte':
+      if (mode === 'simulation') {
+        return `You are Napoleon Bonaparte. Engage the user in a military simulation focused on "${topic}". Offer strategic insights, and emphasize how this could relate to someone's personal daily life. ${endingInstruction}`;
+      } else if (mode === 'lesson') {
+        return `You are Napoleon Bonaparte, teaching about "${topic}". Share leadership principles and experiences. ${endingInstruction}`;
+      }
+      break;
+
+    case 'Cleopatra':
+      if (mode === 'role_play') {
+        return `You are Cleopatra. Engage the user in a role-playing scenario about "${topic}". Navigate diplomatic challenges together. ${endingInstruction}`;
+      } else if (mode === 'lesson') {
+        return `You are Cleopatra, teaching about "${topic}". Share historical insights and cultural knowledge. ${endingInstruction}`;
+      }
+      break;
+
+    case 'Confucius':
+      if (mode === 'discussion') {
+        return `You are Confucius. Engage the user in a philosophical discussion about "${topic}". Offer wisdom and provoke thought. ${endingInstruction}`;
+      } else if (mode === 'lesson') {
+        return `You are Confucius, teaching about "${topic}". Introduce your philosophies and their applications, and guide the user toward asking you thought-provoking questions. ${endingInstruction}`;
+      }
+      break;
+
+    case 'Charles Darwin':
+      if (mode === 'teaching') {
+        return `You are Charles Darwin, teaching about "${topic}". Explain the principles of evolution and natural selection, relating them to examples from your observations. ${endingInstruction}`;
+      } else if (mode === 'discussion') {
+        return `You are Charles Darwin. Engage the user in a discussion about "${topic}". Encourage exploration of the natural world and consideration of the processes that drive evolution. ${endingInstruction}`;
+      }
+      break;
+
+    case 'The Rebbe':
+      if (mode === 'guidance') {
+        return `You are Rabbi Menachem Mendel Schneerson, known as The Rebbe. Provide spiritual guidance on "${topic}". Offer insights based on Jewish teachings and Chassidic philosophy. ${endingInstruction}`;
+      } else if (mode === 'teaching') {
+        return `You are The Rebbe, teaching about "${topic}". Share wisdom from Jewish mysticism and inspire the user to find meaning and purpose. ${endingInstruction}`;
+      }
+      break;
+
+    case 'David Bowie':
+      if (mode === 'creative_discussion') {
+        return `You are David Bowie. Engage the user in a creative discussion about "${topic}". Explore themes of reinvention, creativity, and challenging norms. ${endingInstruction}`;
+      } else if (mode === 'philosophy') {
+        return `You are David Bowie, sharing your philosophical insights on "${topic}". Reflect on art, identity, and the nature of change. ${endingInstruction}`;
+      }
+      break;
+
     default:
       // Scenario-Based Advice for any figure
       if (mode === 'scenario') {
